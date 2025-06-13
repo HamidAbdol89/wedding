@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Text, Box } from '@react-three/drei';
-import { Heart, Calendar, MapPin, Users, Music, Mail, Phone } from 'lucide-react';
+import { Heart, Calendar, MapPin, Users, Music, Mail, Phone,MessageCircle } from 'lucide-react';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
+import emailjs from '@emailjs/browser';
 
 const weddingImages = [
   '13.png','4.jpg',  '9.jpg', '10.JPG',  '11.JPG', '12.jpg','8.jpg',
@@ -308,6 +309,12 @@ export default function WeddingInvitation() {
 
 const [fullscreenOpen, setFullscreenOpen] = useState(false);
 const [isUserInteracting, setIsUserInteracting] = useState(false);
+const [modalOpen, setModalOpen] = useState(false);
+const [modalContent, setModalContent] = useState({
+  title: '',
+  message: '',
+  isError: false,
+});
 
 
     const [formData, setFormData] = useState({
@@ -336,12 +343,12 @@ const [isUserInteracting, setIsUserInteracting] = useState(false);
     rsvp: 'Xác Nhận'
   };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+const handleInputChange = (e) => {
+  setFormData({
+    ...formData,
+    [e.target.name]: e.target.value
+  });
+};
 
 
  // THAY THẾ useEffect TỰ ĐỘNG CHUYỂN ẢNH CŨ BẰNG CÁI NÀY:
@@ -366,29 +373,92 @@ const navigateImage = (direction) => {
 };
 
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Tạo nội dung email
-    const subject = encodeURIComponent('Xác nhận tham dự lễ cưới DUSÔ & HASIKIN');
-    const body = encodeURIComponent(`
-Xin chào,
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Hiển thị loading state với animation đẹp
+  setModalContent({
+    title: "Đang xử lý yêu cầu",
+    message: "Vui lòng chờ trong giây lát...",
+    isError: false,
+    isLoading: true
+  });
+  setModalOpen(true);
 
-Tôi xác nhận tham dự lễ cưới với thông tin sau:
-
-Họ tên: ${formData.name}
-Số điện thoại: ${formData.phone}
-Số người tham dự: ${formData.guests}
-Lời chúc: ${formData.message}
-
-Trân trọng,
-${formData.name}
-    `);
-    
-    // Mở Gmail với thông tin đã điền sẵn
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=wedding.yusohkin@gmail.com&su=${subject}&body=${body}`;
-    window.open(gmailUrl, '_blank');
+  const templateParams = {
+    from_name: formData.name,
+    phone: formData.phone,
+    guests: formData.guests,
+    message: formData.message,
+    date: new Date().toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+    ip_address: await fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => data.ip)
+      .catch(() => 'Unknown')
   };
+
+  try {
+    // Giả lập thời gian chờ tối thiểu để UX mượt mà
+    const sendPromise = emailjs.send(
+      'service_e67szrs',
+      'template_7fi94ca',
+      templateParams,
+      'q05JBffJg3W0pmOJh'
+    );
+    
+    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1500));
+    
+    await Promise.all([sendPromise, timeoutPromise]);
+
+    // Reset form
+    setFormData({
+      name: '',
+      phone: '',
+      guests: '',
+      message: ''
+    });
+
+    // Hiệu ứng confetti khi thành công
+    if (typeof window !== 'undefined') {
+      const { default: confetti } = await import('canvas-confetti');
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#34d399', '#a7f3d0']
+      });
+    }
+
+    setModalContent({
+      title: "Thành công!",
+      message: "Cảm ơn bạn đã xác nhận tham dự! Hẹn gặp bạn tại lễ cưới nhé!❤️",
+      isError: false,
+      isLoading: false
+    });
+
+    // Tự động đóng sau 8 giây
+    setTimeout(() => {
+      setModalOpen(false);
+    }, 8000);
+
+  } catch (error) {
+    console.error('Lỗi khi gửi email:', error);
+    
+    setModalContent({
+      title: "Lỗi hệ thống",
+      message: `Xin lỗi, đã có lỗi xảy ra (Mã lỗi: ${error.code || 'UNKNOWN'}). Vui lòng thử lại sau ít phút hoặc liên hệ trực tiếp qua số điện thoại 0909.xxx.xxx để được hỗ trợ.`,
+      isError: true,
+      isLoading: false
+    });
+  }
+};
+
 
  return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 overflow-hidden">
@@ -766,108 +836,257 @@ ${formData.name}
             </div>
           </div>
         )}
-        {currentSection === 'rsvp' && (
-          <div className="max-w-2xl mx-auto px-4 py-8 sm:py-16">
-            <h2 className="text-2xl sm:text-4xl font-serif text-center text-rose-600 mb-8 sm:mb-12">
-              Xác Nhận Tham Dự
-            </h2>
-            
-            <div className="bg-white/60 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-rose-200">
-              <div className="space-y-4 sm:space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Họ và Tên *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="Nhập họ và tên của bạn"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Số Điện Thoại
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Số Người Tham Dự
-                  </label>
-                  <select 
-                    name="guests"
-                    value={formData.guests}
-                    onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                  >
-                    <option value="1">1 người</option>
-                    <option value="2">2 người</option>
-                    <option value="3">3 người</option>
-                    <option value="4">4 người</option>
-                    <option value="5+">Hơn 4 người</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lời Chúc
-                  </label>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
-                    placeholder="Gửi lời chúc đến cô dâu chú rể..."
-                  />
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-rose-500 to-purple-500 text-white py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-                >
-                  <div className="flex items-center justify-center space-x-2">
-                    <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Gửi qua Gmail</span>
-                  </div>
-                </button>
-              </div>
-              
-              <div className="mt-6 sm:mt-8 text-center">
-                <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Hoặc liên hệ trực tiếp:</p>
-                <div className="space-y-2">
-                  <a 
-                    href="tel:0123456789"
-                    className="flex items-center justify-center space-x-2 text-rose-600 font-semibold text-sm sm:text-base hover:bg-rose-50 py-2 rounded-lg transition-colors"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>Chú Rể: 0123-456-789</span>
-                  </a>
-                  <a 
-                    href="tel:0987654321"
-                    className="flex items-center justify-center space-x-2 text-purple-600 font-semibold text-sm sm:text-base hover:bg-purple-50 py-2 rounded-lg transition-colors"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span>Cô Dâu: 0987-654-321</span>
-                  </a>
-                </div>
-              </div>
+   {currentSection === 'rsvp' && (
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    className="max-w-2xl mx-auto px-4 py-8 sm:py-16"
+  >
+    <div className="text-center mb-10 sm:mb-14">
+      <motion.h2 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="text-3xl sm:text-5xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-purple-600 mb-3"
+      >
+        Xác Nhận Tham Dự
+      </motion.h2>
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-gray-600 text-sm sm:text-base"
+      >
+        Vui lòng điền thông tin bên dưới để chúng tôi chuẩn bị chu đáo
+      </motion.p>
+    </div>
+    
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.3 }}
+      className="bg-white/80 backdrop-blur-lg rounded-3xl p-6 sm:p-10 border border-white shadow-xl overflow-hidden relative"
+    >
+      {/* Hiệu ứng nền tinh tế */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-rose-100 rounded-full opacity-20 blur-xl"></div>
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-100 rounded-full opacity-20 blur-xl"></div>
+      
+      <form onSubmit={handleSubmit} className="relative z-10 space-y-6 sm:space-y-8">
+        {/* Field Họ và Tên */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <label className="block text-sm font-medium text-gray-700 mb-2 pl-1">
+            Họ và Tên <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              className="w-full px-5 py-3 text-base rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-white/90 transition-all duration-200"
+              placeholder="Nguyễn Văn A"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <Users className="w-5 h-5 text-gray-400" />
             </div>
           </div>
-        )}
+        </motion.div>
+        
+        {/* Field Số Điện Thoại */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <label className="block text-sm font-medium text-gray-700 mb-2 pl-1">
+            Số Điện Thoại
+          </label>
+          <div className="relative">
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              className="w-full px-5 py-3 text-base rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-white/90 transition-all duration-200"
+              placeholder="0987 654 321"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <Phone className="w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Field Số Người Tham Dự */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <label className="block text-sm font-medium text-gray-700 mb-2 pl-1">
+            Số Người Tham Dự
+          </label>
+          <div className="relative">
+            <select 
+              name="guests"
+              value={formData.guests}
+              onChange={handleInputChange}
+              className="w-full px-5 py-3 text-base rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-white/90 appearance-none transition-all duration-200"
+            >
+              <option value="1">1 người</option>
+              <option value="2">2 người</option>
+              <option value="3">3 người</option>
+              <option value="4">4 người</option>
+              <option value="5+">Hơn 4 người</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <Users className="w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Field Lời Chúc */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <label className="block text-sm font-medium text-gray-700 mb-2 pl-1">
+            Lời Chúc
+          </label>
+          <div className="relative">
+            <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleInputChange}
+              rows={4}
+              className="w-full px-5 py-3 text-base rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-white/90 resize-none transition-all duration-200"
+              placeholder="Gửi lời chúc mừng đến cô dâu chú rể..."
+            />
+            <div className="absolute top-3 right-3 flex items-center pr-3 pointer-events-none">
+              <MessageCircle className="w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Nút Submit */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="pt-4"
+        >
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-rose-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg relative overflow-hidden transition-all duration-300 active:scale-[0.98]"
+          >
+            <span className="relative z-10 flex items-center justify-center space-x-3">
+              <Mail className="w-5 h-5" />
+              <span>Gửi Xác Nhận</span>
+            </span>
+            <span className="absolute inset-0 bg-gradient-to-r from-rose-700 to-purple-700 opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
+          </button>
+        </motion.div>
+      </form>
+    </motion.div>
+  </motion.div>
+)}
+
+{modalOpen && (
+  <div className="fixed inset-0 bg-gradient-to-br from-black/40 to-purple-900/20 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-500 animate-fadeIn">
+    <motion.div 
+      initial={{ opacity: 0, y: -50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 50 }}
+      transition={{ type: "spring", damping: 20, stiffness: 300 }}
+      className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-8 shadow-2xl w-[95%] max-w-lg mx-auto border border-white/20 overflow-hidden"
+    >
+      {/* Hiệu ứng ánh sáng */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className={`absolute -top-20 -left-20 w-40 h-40 rounded-full blur-xl opacity-30 ${modalContent.isError ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+        <div className={`absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-lg opacity-20 ${modalContent.isError ? 'bg-red-400' : 'bg-emerald-400'}`}></div>
+      </div>
+      
+      {/* Nội dung chính */}
+      <div className="relative z-10">
+        <div className="flex justify-center mb-6">
+          {modalContent.isLoading ? (
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500"></div>
+          ) : modalContent.isError ? (
+            <motion.div 
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-red-100 to-red-50 p-4 rounded-full border border-red-200 shadow-inner"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className="bg-gradient-to-br from-emerald-100 to-emerald-50 p-4 rounded-full border border-emerald-200 shadow-inner"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </motion.div>
+          )}
+        </div>
+        
+        <motion.h2 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className={`text-3xl font-extrabold mb-4 text-center bg-clip-text ${modalContent.isError 
+            ? 'text-transparent bg-gradient-to-r from-red-500 to-red-600' 
+            : 'text-transparent bg-gradient-to-r from-emerald-500 to-teal-600'}`}
+        >
+          {modalContent.title}
+        </motion.h2>
+        
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-gray-600 mb-8 text-center leading-relaxed text-lg"
+        >
+          {modalContent.message}
+        </motion.p>
+        
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex justify-center"
+        >
+          <button
+            onClick={() => setModalOpen(false)}
+            className={`relative overflow-hidden px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg ${
+              modalContent.isError 
+                ? 'bg-gradient-to-br from-red-500 to-red-600 hover:shadow-red-300/50 text-white' 
+                : 'bg-gradient-to-br from-emerald-500 to-teal-600 hover:shadow-emerald-300/50 text-white'
+            }`}
+          >
+            <span className="relative z-10">Đóng</span>
+            <span className={`absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300`}></span>
+          </button>
+        </motion.div>
+      </div>
+      
+      {/* Hiệu ứng viền ánh sáng */}
+      <div className={`absolute inset-0 rounded-2xl pointer-events-none border-2 ${modalContent.isError ? 'border-red-500/20' : 'border-emerald-500/20'}`}></div>
+    </motion.div>
+  </div>
+)}
+
       </div>
   <audio 
         ref={audioRef} 
