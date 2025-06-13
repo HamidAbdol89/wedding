@@ -517,7 +517,7 @@ ${formData.name}
           </div>
         )}
 
-        {currentSection === 'gallery' && (
+  {currentSection === 'gallery' && (
           <div className="max-w-7xl mx-auto px-4 py-8 sm:py-16">
             <h2 className="text-3xl sm:text-5xl font-serif text-center bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 bg-clip-text text-transparent mb-8 sm:mb-12 tracking-wide">
               Album Ảnh Cưới
@@ -525,35 +525,27 @@ ${formData.name}
             
             {/* Main Gallery Container */}
             <div className="relative">
-              {/* Full-screen Image Display - Optimized */}
+              {/* Full-screen Image Display - Ultra High Quality */}
               <div className="relative w-full h-[60vh] sm:h-[75vh] bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl overflow-hidden shadow-2xl">
                 <div className="absolute inset-0 rounded-xl overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentImageIndex}
-                      initial={{ opacity: 0, scale: 0.98 }}
+                      initial={{ opacity: 0 }}
                       animate={{ 
-                        opacity: 1, 
-                        scale: 1,
+                        opacity: 1,
                         transition: { 
-                          duration: 0.7,  // Tăng thời gian cho mượt hơn
-                          ease: [0.33, 1, 0.68, 1]  // Easing function tối ưu
+                          duration: 0.4,
+                          ease: [0.25, 0.46, 0.45, 0.94]
                         }
                       }}
                       exit={{ 
-                        opacity: 0, 
-                        scale: 0.98,
+                        opacity: 0,
                         transition: { 
-                          duration: 0.7 
+                          duration: 0.2 
                         }
                       }}
-                      style={{
-                        willChange: 'transform, opacity',
-                        transformStyle: 'preserve-3d',
-                        height: '100%',
-                        width: '100%',
-                        backfaceVisibility: 'hidden'  // Chống răng cưa
-                      }}
+                      className="absolute inset-0"
                     >
                       <img
                         src={`/images/${weddingImages[currentImageIndex]}`}
@@ -561,31 +553,42 @@ ${formData.name}
                         className="w-full h-full object-cover object-center rounded-xl cursor-zoom-in"
                         loading="eager"
                         decoding="sync"
+                        fetchPriority="high"
+                        sizes="(max-width: 768px) 100vw, 90vw"
                         style={{
-                          transform: 'translateZ(0)',  // GPU acceleration
-                          backfaceVisibility: 'hidden',
+                          transform: 'translate3d(0,0,0)',
+                          willChange: 'opacity',
                           imageRendering: 'high-quality',
-                          contentVisibility: 'auto'  // Tối ưu render
+                          WebkitImageSmoothing: 'high',
+                          imageSmoothing: 'high',
+                          filter: 'none',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden'
+                        }}
+                        onLoad={(e) => {
+                          // Đảm bảo ảnh render với chất lượng cao nhất
+                          e.target.style.imageRendering = 'crisp-edges';
+                          e.target.style.imageRendering = '-webkit-optimize-contrast';
+                          e.target.style.imageRendering = 'optimize-quality';
                         }}
                         onError={(e) => {
-                          e.target.src = 'data:image/svg+xml,...';
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyNkMyMy4zMTM3IDI2IDI2IDIzLjMxMzcgMjYgMjBDMjYgMTYuNjg2MyAyMy4zMTM3IDE0IDIwIDE0QzE2LjY4NjMgMTQgMTQgMTYuNjg2MyAxNCAyMEMxNCAyMy4zMTM3IDE2LjY4NjMgMjYgMjAgMjZaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==';
                         }}
                       />
                     </motion.div>
                   </AnimatePresence>
                 </div>
                 
-                {/* Navigation Controls (Giữ nguyên) */}
-                <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-6 pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-300">
+                {/* Navigation Controls - Simplified */}
+                <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-6 pointer-events-none">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       navigateImage('prev');
                     }}
-                    className="pointer-events-auto group bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 p-3 sm:p-4 rounded-2xl shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
-                    style={{ willChange: 'transform' }}  // Tối ưu animation
+                    className="pointer-events-auto group bg-white/25 backdrop-blur-md hover:bg-white/35 p-3 sm:p-4 rounded-2xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 opacity-80 hover:opacity-100"
                   >
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
@@ -594,30 +597,22 @@ ${formData.name}
                       e.stopPropagation();
                       navigateImage('next');
                     }}
-                    className="pointer-events-auto group bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 p-3 sm:p-4 rounded-2xl shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-95"
-                    style={{ willChange: 'transform' }}
+                    className="pointer-events-auto group bg-white/25 backdrop-blur-md hover:bg-white/35 p-3 sm:p-4 rounded-2xl shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 opacity-80 hover:opacity-100"
                   >
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                 </div>
 
-                {/* Counter & Fullscreen Button */}
+                {/* Counter & Fullscreen Button - Simplified */}
                 <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 flex items-center space-x-3">
-                  <motion.div 
-                    className="bg-black/30 backdrop-blur-xl text-white px-4 py-2 rounded-2xl text-sm font-medium border border-white/20"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    key={currentImageIndex}
-                  >
+                  <div className="bg-black/40 backdrop-blur-md text-white px-4 py-2 rounded-2xl text-sm font-medium">
                     {currentImageIndex + 1} / {weddingImages.length}
-                  </motion.div>
+                  </div>
                   <button
                     onClick={() => setFullscreenOpen(true)}
-                    className="bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 p-2 rounded-xl transition-all duration-300 transform hover:scale-110"
-                    style={{ willChange: 'transform' }}
+                    className="bg-white/25 backdrop-blur-md hover:bg-white/35 p-2 rounded-xl transition-all duration-200 hover:scale-105"
                   >
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -625,33 +620,27 @@ ${formData.name}
                   </button>
                 </div>
 
-                {/* Progress Bar với Animation */}
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-black/10">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-rose-500 to-pink-500"
-                    initial={{ width: 0 }}
-                    animate={{ 
-                      width: `${((currentImageIndex + 1) / weddingImages.length) * 100}%`,
-                      transition: { duration: 0.7, ease: [0.33, 1, 0.68, 1] }
-                    }}
-                    key={currentImageIndex}
+                {/* Progress Bar - Simplified */}
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-black/15">
+                  <div 
+                    className="h-full bg-gradient-to-r from-rose-500 to-pink-500 transition-all duration-500 ease-out"
+                    style={{ width: `${((currentImageIndex + 1) / weddingImages.length) * 100}%` }}
                   />
                 </div>
               </div>
 
-              {/* Enhanced Thumbnail Grid - Optimized */}
+              {/* Enhanced Thumbnail Grid - Ultra High Quality */}
               <div className="mt-8 sm:mt-12">
                 <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
                   {weddingImages.map((image, index) => (
-                    <motion.button
+                    <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square rounded-2xl overflow-hidden ${
-                        index === currentImageIndex ? 'ring-3 ring-rose-500' : ''
+                      className={`relative aspect-square rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 ${
+                        index === currentImageIndex 
+                          ? 'ring-3 ring-rose-500 shadow-lg' 
+                          : 'hover:shadow-md'
                       }`}
-                      style={{ willChange: 'transform' }}
                     >
                       <img
                         src={`/images/${image}`}
@@ -659,42 +648,51 @@ ${formData.name}
                         className={`w-full h-full object-cover transition-opacity duration-300 ${
                           index === currentImageIndex ? 'opacity-100' : 'opacity-70 hover:opacity-100'
                         }`}
-                        loading="lazy"
-                        decoding="async"
-                        style={{
-                          contentVisibility: 'auto',
-                          transform: 'translateZ(0)'
+                        loading="eager"
+                        decoding="sync"
+                        fetchPriority="high"
+                        sizes="(max-width: 640px) 25vw, (max-width: 1024px) 16.67vw, 12.5vw"
+                        style={{ 
+                          transform: 'translate3d(0,0,0)',
+                          imageRendering: 'high-quality',
+                          WebkitImageSmoothing: 'high',
+                          imageSmoothing: 'high',
+                          filter: 'none',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden'
+                        }}
+                        onLoad={(e) => {
+                          // Tối ưu chất lượng render cho thumbnail
+                          e.target.style.imageRendering = 'crisp-edges';
+                          e.target.style.imageRendering = '-webkit-optimize-contrast';
+                          e.target.style.imageRendering = 'optimize-quality';
                         }}
                         onError={(e) => {
-                          e.target.src = `data:image/svg+xml,...`;
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyNkMyMy4zMTM3IDI2IDI2IDIzLjMxMzcgMjYgMjBDMjYgMTYuNjg2MyAyMy4zMTM3IDE0IDIwIDE0QzE2LjY4NjMgMTQgMTQgMTYuNjg2MyAxNCAyMEMxNCAyMy4zMTM3IDE2LjY4NjMgMjYgMjAgMjZaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPg==';
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       {index === currentImageIndex && (
-                        <motion.div 
-                          className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white shadow-lg"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ repeat: Infinity, duration: 1.5 }}
-                        />
+                        <div className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white shadow-lg animate-pulse" />
                       )}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              {/* Fullscreen Modal - Optimized */}
+              {/* Fullscreen Modal - Ultra High Quality */}
               {fullscreenOpen && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm"
+                  transition={{ duration: 0.2 }}
+                  className="fixed inset-0 z-50 bg-black/95"
                   onClick={() => setFullscreenOpen(false)}
                 >
                   <div className="absolute inset-0 flex items-center justify-center p-4">
                     <button
                       onClick={() => setFullscreenOpen(false)}
-                      className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-xl border border-white/30 hover:bg-white/30 p-3 rounded-2xl transition-all duration-300"
+                      className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md hover:bg-white/30 p-3 rounded-2xl transition-all duration-200"
                     >
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -706,47 +704,60 @@ ${formData.name}
                         key={`fullscreen-${currentImageIndex}`}
                         src={`/images/${weddingImages[currentImageIndex]}`}
                         alt={`Wedding photo ${currentImageIndex + 1}`}
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
                         transition={{ duration: 0.3 }}
                         className="max-w-full max-h-full object-contain rounded-3xl shadow-2xl"
-                        style={{
-                          transform: 'translateZ(0)',
-                          imageRendering: 'high-quality'
+                        loading="eager"
+                        decoding="sync"
+                        fetchPriority="high"
+                        sizes="100vw"
+                        style={{ 
+                          transform: 'translate3d(0,0,0)',
+                          imageRendering: 'high-quality',
+                          WebkitImageSmoothing: 'high',
+                          imageSmoothing: 'high',
+                          filter: 'none',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden'
+                        }}
+                        onLoad={(e) => {
+                          // Chất lượng tối đa cho fullscreen
+                          e.target.style.imageRendering = 'crisp-edges';
+                          e.target.style.imageRendering = '-webkit-optimize-contrast';
+                          e.target.style.imageRendering = 'optimize-quality';
                         }}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </AnimatePresence>
 
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity duration-500 group">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigateImage('prev');
-                        }}
-                        className="bg-black/30 backdrop-blur-sm border border-white/20 hover:bg-black/50 p-2 rounded-xl transition-all duration-300 transform hover:scale-110"
-                      >
-                        <svg className="w-5 h-5 text-white/80 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity duration-500 group">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigateImage('next');
-                        }}
-                        className="bg-black/30 backdrop-blur-sm border border-white/20 hover:bg-black/50 p-2 rounded-xl transition-all duration-300 transform hover:scale-110"
-                      >
-                        <svg className="w-5 h-5 text-white/80 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
+                    {/* Fullscreen Navigation */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateImage('prev');
+                      }}
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/40 backdrop-blur-sm hover:bg-black/60 p-3 rounded-xl transition-all duration-200 hover:scale-105"
+                    >
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
                     
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/40 backdrop-blur-xl text-white px-6 py-3 rounded-2xl font-medium border border-white/20">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateImage('next');
+                      }}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/40 backdrop-blur-sm hover:bg-black/60 p-3 rounded-xl transition-all duration-200 hover:scale-105"
+                    >
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-medium">
                       {currentImageIndex + 1} / {weddingImages.length}
                     </div>
                   </div>
