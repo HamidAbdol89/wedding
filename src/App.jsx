@@ -495,7 +495,6 @@ const handleSubmit = async (e) => {
                 <pointLight position={[-8, -8, -8]} intensity={0.4} color="#ff69b4" />
                 <Wedding3DPortal/>
                 <FloatingHearts />
-                Wedding3DPortal
                 <OrbitControls 
                   enableZoom={false}
                   enablePan={false}
@@ -505,6 +504,7 @@ const handleSubmit = async (e) => {
                   autoRotateSpeed={0.5}
                 />
               </Canvas>
+
             </div>
 
             {/* Overlay Text - Mobile Responsive */}
@@ -584,7 +584,9 @@ const handleSubmit = async (e) => {
                 Chúng tôi rất mong được chia sẻ niềm hạnh phúc này cùng với bạn!
               </p>
             </div>
+
           </div>
+          
         )}
 
   {currentSection === 'gallery' && (
